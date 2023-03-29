@@ -14,3 +14,18 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+//async await function example:
+/*
+  //simulate network request for a username
+  String username = await Future.delayed(Duration(seconds: 3), () {
+    return 'Måns';
+  });
+
+  //simulate network request to get bio of the username
+  String usernametwo = await Future.delayed(Duration(seconds: 2), () {
+    return 'Elin kommer före Måns';
+  });
+
+  print('$username - $usernametwo');
+  */
