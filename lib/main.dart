@@ -1,11 +1,12 @@
-import 'package:flutter_weather_app/providers/weather_provider.dart';
-import 'package:flutter_weather_app/services/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'models/models.dart';
 import 'providers/providers.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'providers/weather_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const ProviderScope(child: MyWeatherApp()));
 }
 
@@ -16,25 +17,28 @@ class MyWeatherApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
+      themeMode: ThemeMode.system,
       home: MyHomePage(title: 'Väder appen'),
       debugShowCheckedModeBanner: false,
+      // This is the theme of your application.
+      //
+      // Try running your application with "flutter run". You'll see the
+      // application has a blue toolbar. Then, without quitting the app, try
+      // changing the primarySwatch below to Colors.green and then invoke
+      // "hot reload" (press "r" in the console where you ran "flutter run",
+      // or simply save your changes to "hot reload" in a Flutter IDE).
+      // Notice that the counter didn't reset back to zero; the application
+      // is not restarted.
     );
   }
 }
 
 class MyHomePage extends ConsumerWidget {
+
+  final String title;
+  final RefreshController _refreshController = 
+    RefreshController(initialRefresh: false);
+
   MyHomePage({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
@@ -46,22 +50,23 @@ class MyHomePage extends ConsumerWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  String title;
-  int _counter = 0;
+  void _onRefresh(WidgetRef ref) async {
+    // monitor network fetch
+    // await Future.delayed(const Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    ref.read(weatherNotifier.notifier).reload();
+    _refreshController.refreshCompleted();
+  }
 
-  void _incrementCounter() {
-    // This call to setState tells the Flutter framework that something has
-    // changed in this State, which causes it to rerun the build method below
-    // so that the display can reflect the updated values. If we changed
-    // _counter without calling setState(), then the build method would not be
-    // called again, and so nothing would appear to happen.
-    _counter++;
+  void _onLoading() async {
+    // monitor network fetch
+    await Future.delayed(const Duration(milliseconds: 1000));
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
 
-    print('$_counter');
+    _refreshController.loadComplete();
   }
 
   // final moviesProvider = StateNotifierProvider<WeatherNotifier, WeatherState>((ref) => WeatherNotifier());
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // This method is rerun every time setState is called, for instance as done
@@ -71,20 +76,22 @@ class MyHomePage extends ConsumerWidget {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
+      /*appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(title),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.read(weatherNotifier.notifier).reload();
-          print('hello');
-          return Future<void>.delayed(const Duration(seconds: 2));
-        },
+      */
+      body: SmartRefresher(
+        enablePullDown: true,
+        enablePullUp: false,
+        header: const WaterDropHeader(),
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         //child: SingleChildScrollView(
+        controller: _refreshController,
+        onRefresh: () => {_onRefresh(ref)},
+        onLoading: _onLoading,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -130,13 +137,14 @@ class MyHomePage extends ConsumerWidget {
         ),
         //),
       ),
-
+/*
       floatingActionButton: FloatingActionButton(
         onPressed: () => {
           // ref.read(counterProvider.notifier).increment()
         },
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      */ // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
@@ -149,7 +157,7 @@ class WeatherWidget extends ConsumerWidget {
     return ref.watch(weatherNotifier).when(data: (wdt) {
       return Text("From weather widget ${wdt.airTemperature} temp");
     }, error: (Object error, StackTrace stackTrace) {
-      return Text("Error");
+      return const Text("Error");
     }, loading: () {
       return const CircularProgressIndicator.adaptive();
     });
