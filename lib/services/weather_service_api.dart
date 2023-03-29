@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter_weather_app/models/models.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class WeatherServiceAPI {
@@ -14,7 +13,6 @@ class WeatherServiceAPI {
     return json;
     */
     
-    print("calling get");
     final response = await http.get(
       Uri.parse(
           'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=55.607997568&lon=12.97249611'),
@@ -26,7 +24,6 @@ class WeatherServiceAPI {
       },
     );
 
-    print("get responded with code ${response.statusCode} get");
     
     if (response.statusCode == 200) {
       // If the server did return a 201 CREATED response,
