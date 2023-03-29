@@ -18,7 +18,7 @@ class MyWeatherApp extends StatelessWidget {
       title: 'Flutter Demo',
       themeMode: ThemeMode.system,
       home: MyHomePage(title: 'Väder appen',
-      tooltip: Text('pull to refresh.')),
+      ),
       
       debugShowCheckedModeBanner: false,
       // This is the theme of your application.
