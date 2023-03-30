@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_weather_app/models/weather_datetime.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'providers/weather_provider.dart';
 
@@ -77,12 +78,12 @@ class MyHomePage extends ConsumerWidget {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      /*appBar: AppBar(
+      appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(title),
       ),
-      */
+
       body: SmartRefresher(
         enablePullDown: true,
         enablePullUp: false,
@@ -150,17 +151,109 @@ class MyHomePage extends ConsumerWidget {
   }
 }
 
+class WeatherAvatarWidget extends ConsumerWidget {
+  const WeatherAvatarWidget(WeatherDatetimeFormatter weatherDatetimeFormatter,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const CircleAvatar(
+      backgroundImage: AssetImage('images/turning_torso_sun.jpg'),
+      radius: 150,
+    );
+  }
+}
+
 class WeatherWidget extends ConsumerWidget {
   const WeatherWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ref.watch(weatherNotifier).when(data: (wdt) {
-      return Text("From weather widget ${wdt.airTemperature} temp");
-    }, error: (Object error, StackTrace stackTrace) {
-      return const Text("Error");
-    }, loading: () {
-      return const CircularProgressIndicator.adaptive();
-    });
+    return ref.watch(weatherNotifier).when(
+      data: (wdt) {
+        return WeatherFormattedWidget(
+          weatherDatetime: wdt,
+        );
+
+        /*    return Text.rich(
+          TextSpan(
+            text: 'Current temperature  ',
+            children: <TextSpan>[
+              TextSpan(
+                  text: "${wdt.airTemperature}",
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 15)),
+              
+            ],
+          ),
+        );*/
+      },
+      error: (Object error, StackTrace stackTrace) {
+        return const Text("Error");
+      },
+      loading: () {
+        return const CircularProgressIndicator.adaptive();
+      },
+    );
+  }
+}
+
+class WeatherFormattedWidget extends StatelessWidget {
+  WeatherDatetime weatherDatetime;
+
+  late WeatherDatetimeFormatter weatherDatetimeFormatter;
+
+  WeatherFormattedWidget({required this.weatherDatetime, super.key}) {
+    weatherDatetimeFormatter = WeatherDatetimeFormatter(weatherDatetime);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        WeatherAvatarWidget(weatherDatetimeFormatter),
+        WidgetText(weatherDatetimeFormatter: weatherDatetimeFormatter),
+      ],
+    );
+  }
+}
+
+class WeatherDatetimeFormatter {
+  WeatherDatetime weatherDatetime;
+
+  WeatherDatetimeFormatter(this.weatherDatetime);
+
+  String? getText() {
+    return (weatherDatetime.airTemperature);
+  }
+}
+
+class WidgetText extends StatelessWidget {
+  WeatherDatetimeFormatter weatherDatetimeFormatter;
+
+  WidgetText({required this.weatherDatetimeFormatter, super.key});
+  String widgetText = '';
+
+  String get getText {
+    return widgetText;
+  }
+
+  set setText(String text) {
+    widgetText = text;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        text: 'Current temperature  ',
+        children: <TextSpan>[
+          TextSpan(
+              text: weatherDatetimeFormatter.getText(),
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        ],
+      ),
+    );
   }
 }
